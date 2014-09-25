@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Render Caching in Drupal 7 and 8</title>
+
+		<meta name="description" content="Render Caching has been there in Drupal since Drupal 7, but never before Drupal 8 and the render_cache module for Drupal 7 has it been so simple to have a fast website with automatic content expiration.">
+		<meta name="author" content="Fabian Franz, Marco Molinari &amp; Wim Leers">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="src/reveal/css/reveal.min.css">
+		<link rel="stylesheet" href="src/reveal/css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="src/reveal/lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'src/reveal/css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="src/reveal/lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+					<h1>Render Caching in Drupal 7 and 8</h1>
+					<p>
+						<ul>
+							<li>Fabian Franz
+							<li>Marco Molinari
+							<li>Wim Leers
+						</ul>
+					</p>
+				</section>
+
+				<section>
+					<section>
+						<h2>Marco (15 minutes)</h2>
+					</section>
+					<section>
+						<h2>D7 - current state and manual #cache, #pre_render</h2>
+					</section>
+					<section>
+						<h2>render_cache makes it simpler to use for many cases</h2>
+					</section>
+					<section>
+						<h2>Hash based approach allows simpler variations and expiration (entity modified)</h2>
+					</section>
+					<section>
+						<h2>DEMO and awe! (metrics, xhprof)</h2>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Fabian (5 minutes)</h2>
+					</section>
+					<section>
+						<h2>Ideal case in an ideal world (stacked rendering)</h2>
+					</section>
+					<section>
+						<h2>The problem of cache invalidation</h2>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Wim (15 minutes)</h2>
+					</section>
+					<section>
+						<h2>D8 present state: #cache tags up to X-Drupal-Cache-Tags header, recursive rendering, placeholders for forms.</h2>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Fabian (10 minutes)</h2>
+					</section>
+					<section>
+						<h2>D7 future - render_cache-7.x-2.x-dev -- full page caching, placeholders and cacheable CSRF for forms, pseudo #cache tags, cache revalidation.</h2>
+					</section>
+					<section>
+						<h2>ESI, Big Pipe, etc. => extending outside the stack</h2>
+					</section>
+				</section>
+
+				<section>
+					<h1>Questions?</h1>
+					<p><a href="https://github.com/wimleers/talk-render-caching-in-drupal-7-and-8">github.com/wimleers/talk-render-caching-in-drupal-7-and-8</a></p>
+					<h3><em>Thanks!</em></h3>
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="src/reveal/lib/js/head.min.js"></script>
+		<script src="src/reveal/js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'src/reveal/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'src/reveal/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'src/reveal/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'src/reveal/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'src/reveal/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'src/reveal/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
