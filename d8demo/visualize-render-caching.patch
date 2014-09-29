@@ -1,0 +1,55 @@
+ core/includes/common.inc                 | 10 ++++++++++
+ core/modules/system/css/system.theme.css | 12 ++++++++++++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/core/includes/common.inc b/core/includes/common.inc
+index 70f8438..f78a093 100644
+--- a/core/includes/common.inc
++++ b/core/includes/common.inc
+@@ -2723,6 +2723,14 @@ function drupal_render(&$elements, $is_recursive_call = FALSE) {
+   // callbacks and return the final markup.
+   if (isset($elements['#cache'])) {
+     $cached_element = drupal_render_cache_get($elements);
++    if (isset($elements['#cache']['tags'])) {
++      $elements['#attributes']['class'][] = 'cache-tagged';
++      $elements['#attributes']['data-cache-tags'] = implode(' ', $elements['#cache']['tags']);
++    }
++    if (isset($elements['#cache']['cid']) || isset($elements['#cache']['keys'])) {
++      $elements['#attributes']['class'][] = 'render-cached';
++    }
++
+     if ($cached_element !== FALSE) {
+       $elements = $cached_element;
+       // Only when we're not in a recursive drupal_render() call,
+@@ -3092,6 +3100,8 @@ function drupal_render_cache_set(&$markup, array $elements) {
+   // be retrieved and used.
+   $data['#markup'] = $markup;
+ 
++  $data['#markup'] .= "<div style='border: 1px solid green; background-color:#f3faef;; color:#325e1c;'><code>$cid</code></div>";
++
+   // Persist attached data associated with this element.
+   $data['#attached'] = $elements['#attached'];
+ 
+diff --git a/core/modules/system/css/system.theme.css b/core/modules/system/css/system.theme.css
+index 184b78a..2740e09 100644
+--- a/core/modules/system/css/system.theme.css
++++ b/core/modules/system/css/system.theme.css
+@@ -3,6 +3,18 @@
+  * Basic styling for common markup.
+  */
+ 
++.cache-tagged {
++  outline: 2px solid greenyellow!important;
++}
++.render-cached {
++  outline: 5px solid red !important;
++}
++.cache-tagged.render-cached {
++  outline: 1px solid green !important;
++  box-shadow: inset 0 0 100px 30px green !important;
++}
++
++
+ /**
+  * Publishing status.
+  */

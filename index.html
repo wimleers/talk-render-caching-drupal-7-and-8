@@ -30,6 +30,18 @@
 				document.getElementsByTagName( 'head' )[0].appendChild( link );
 			}
 		</script>
+		
+		<!-- Screenreader-friendly CSS from Drupal :) -->
+		<style>
+		.visually-hidden {
+		  position: absolute !important;
+		  clip: rect(1px, 1px, 1px, 1px);
+		  overflow: hidden;
+		  height: 1px;
+		  width: 1px;
+		  word-wrap: normal;
+		}
+		</style>
 
 		<!--[if lt IE 9]>
 		<script src="src/reveal/lib/js/html5shiv.js"></script>
@@ -85,11 +97,240 @@
 				</section>
 
 				<section>
+					<section data-background="img/8.svg" data-background-size="60%">
+						<h2>Render caching in Drupal 8</h2>
+						<ol>
+							<li>Cache tags
+								<ol>
+									<li>API &amp; DX</li>
+									<li>Entity render caching</li>
+									<li>Bubbling</li>
+									<li><code class="php">X-Drupal-Cache-Tags</code> header + reverse proxies</li>
+								</ol>
+							</li>
+							<li>The uncacheable: <code class="php">#post_render_cache</code></li>
+							<li>7 versus 8: visualization</li>
+						</ol>
+					</section>
+					<!-- Omitted section: "Cache tags == dependencies" — Marco or Fabian should explain this earlier. -->
 					<section>
-						<h2>Wim (15 minutes)</h2>
+						<h2>API &amp; DX</h2>
+						<blockquote>A cache tag is a string</blockquote>
+						<pre><code class="php" style="text-align: center;">$cache_tags = array('node_view', 'node:5', 'user:3');</code></pre>
+						<p style="margin-top: 3em;"><em><small>(It <a href="https://www.drupal.org/node/2344683">used to be</a> much more complex.)</small></em></p>
 					</section>
 					<section>
-						<h2>D8 present state: #cache tags up to X-Drupal-Cache-Tags header, recursive rendering, placeholders for forms.</h2>
+						<h2>API &amp; DX</h2>
+						<blockquote>Adding a cache tag to a render array</blockquote>
+						<pre><code class="php" style="text-align: center;">$element['#cache']['tags'][] = 'user:' . $user->id();</code></pre>
+					</section>
+					<section>
+						<h2>API &amp; DX</h2>
+						<blockquote>Every entity has a cache tag</blockquote>
+						<pre><code class="php" style="text-align: center;">EntityInterface::getCacheTag()</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'][] = $user->getCacheTag();</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'][] = $node->getCacheTag();</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'][] = $term->getCacheTag();</code></pre>
+						<p class="fragment">Not only content entities, but also config entities:</p>
+						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'][] = $menu->getCacheTag();</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'][] = $tour->getCacheTag();</code></pre>
+						<p class="fragment"><small>…</small></p>
+					</section>
+					<section>
+						<h2>API &amp; DX</h2>
+						<blockquote>Adding a cache tag to a render array</blockquote>
+						<pre><code class="php">$element['#cache']['tags'][] = 'user:' . $user->id();</code></pre>
+						<div class="fragment">
+							<p>↓</p>
+							<pre><code class="php">$element['#cache']['tags'] = Cache::mergeTags(
+  $element['#cache']['tags'],
+  $user->getCacheTag()
+);</code></pre>
+						</div>
+					</section>
+					<section>
+						<h2>API &amp; DX</h2>
+						<blockquote>Adding <u>many</u> cache tags to a render array</blockquote>
+						<pre><code class="php">$element['#cache']['tags'] = Cache::mergeTags(
+  $element['#cache']['tags'],
+  $node->getCacheTag(),
+  $user->getCacheTag(),
+  $term->getCacheTag(),
+  …
+);</code></pre>
+					</section>
+					<section>
+						<h2>API &amp; DX</h2>
+						<blockquote>Invalidating cache tags</blockquote>
+						<pre><code class="php" style="text-align: center;">$entity->save();</code></pre>
+						<p>Or, manually:</p>
+						<pre><code class="php" style="text-align: center;">Cache::invalidateTags($entity->getCacheTag())</code></pre>
+					</section>
+					<section>
+						<h2>API &amp; DX</h2>
+						<blockquote>Helpful exceptions</blockquote>
+						<pre><code class="php" style="text-align: center;">Cache::invalidateTags(array('something' => TRUE));</code></pre>
+						<img src="img/exception.png" alt="Screenshot of the exception that is thrown with a stack trace when using an invalid cache tag." />
+					</section>
+					<section>
+						<h2>Entity rendering</h2>
+						<blockquote>… already does this for you!</blockquote>
+						<pre><code class="php">$build = entity_view(Node::load(5));
+
+// Then, once the entity is rendered, all relevant cache tags are present:
+drupal_render($build);
+$build['#cache']['tags'] == array(
+  'filter_format:basic_html',
+  'node:5',
+  'node_view',
+  'taxonomy_term:15',
+  'taxonomy_term:23',
+  'user:12'
+);
+</code></pre>
+<p class="fragment roll-in">And this is what allows automatic render caching of entities!</p>
+					</section>
+					<section>
+						<h2>Bubbling</h2>
+						<blockquote>Just like JavaScript events!</blockquote>
+					</section>
+					<section>
+						<h2>Bubbling: initial state</h2>
+						<pre><code class="xml">&lt;html>
+  <region>
+    <block data-cache-tags="block:search_form"></block>
+  </region>
+  <region>
+    <block data-cache-tags="block:news">
+      <view data-cache-tags="view:news"></view>
+    </block>
+    <block data-cache-tags="block:main_content">
+      <node data-cache-tags="node:17">
+         <field data-cache-tags="user:2"></field>
+         <field data-cache-tags="filter_format:basic_html file:5 file:3"></field>
+      </node>
+    </block>
+  </region>
+&lt;/html></code></pre>
+					</section>
+					<section>
+						<h2>Bubbling: result</h2>
+						<pre><code class="xml">&lt;html data-cache-tags="[all the cache tags from all the regions]">
+  <region data-cache-tags="block:search_form">
+    <block data-cache-tags="block:search_form"></block>
+  </region>
+  <region data-cache-tags="block:news view:news">
+    <block data-cache-tags="block:news view:news">
+      <view data-cache-tags="view:news"></view>
+    </block>
+    <block data-cache-tags="block:main_content node:17 user:2 filter_format:basic_html file:5 file:3">
+      <node data-cache-tags="node:17 user:2 filter_format:basic_html file:5 file:3">
+         <field data-cache-tags="user:2"></field>
+         <field data-cache-tags="filter_format:basic_html file:5 file:3"></field>
+      </node>
+    </block>
+  </region>
+&lt;/html></code></pre>
+					</section>
+					<section>
+						<h2 class="visually-hidden">Bubbling: visualized</h2>
+						<iframe src="d8demo/index.html" width="950" height="600" style="margin:0;overflow:hidden;border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px"></iframe>
+						<p><a href="d8demo/index.html" target="_blank">View demo</a></p>
+					</section>
+					<section>
+						<h2>The <small><code>X-Drupal-Cache-Tags</code></small> header</h2>
+						<small><code>bartik_content block:bartik_footer block:bartik_powered block:bartik_search block:bartik_tools block_plugin:search_form_block block_plugin:system_main_block block_plugin:system_menu_block__footer block_plugin:system_menu_block__tools block_plugin:system_powered_by_block block_view filter_format:basic_html menu:account menu:footer menu:main menu:tools node:1 node:2 node_view rendered taxonomy_term:1 taxonomy_term:2 theme:bartik theme_global_settings user:1 user_view</code></small>
+						<div class="fragment" style="margin-top: 1em;">
+							<p>↓</p>
+							<p>Purge per cache tag on reverse proxies (Varnish, CDN…)!</p>
+							<p><small>(Instantaneous invalidation of <em>all</em> occurrences of a block, an article …)</small></p>
+							<p><a href="https://www.drupal.org/project/purge">Purge module 8.x-2.x</a>, by Niels van Mourik
+						</div>
+					</section>
+					<section>
+						<h2>The uncacheable: <code class="php">#post_render_cache</code></h2>
+					</section>
+					<section>
+						<h2><code class="php">#post_render_cache</code></h2>
+						<p><code>CommentDefaultFormatter</code>:</p>
+						<pre><code class="php">$callback = 'comment.post_render_cache:renderForm';
+$context = array(
+  'entity_type' => $entity->getEntityTypeId(),
+  'entity_id' => $entity->id(),
+  'field_name' => $field_name,
+);
+$placeholder = drupal_render_cache_generate_placeholder($callback, $context);
+$output['comment_form'] = array(
+  '#post_render_cache' => array(
+    $callback => array(
+      $context,
+    ),
+  ),
+  '#markup' => $placeholder,
+);
+</code></pre>
+					</section>
+					<section>
+						<h2><code class="php">#post_render_cache</code></h2>
+						<pre><code class="php" style="max-height: 550px">/**
+ * #post_render_cache callback; replaces placeholder with comment form.
+ *
+ * @param array $element
+ *   The renderable array that contains the to be replaced placeholder.
+ * @param array $context
+ *   An array with the following keys:
+ *   - entity_type: an entity type
+ *   - entity_id: an entity ID
+ *   - field_name: a comment field name
+ *
+ * @return array
+ *   A renderable array containing the comment form.
+ */
+public function renderForm(array $element, array $context) {
+  $comment = …; // Use the data in $context to create an empty comment.
+  $markup = drupal_render($this->entityFormBuilder->getForm($comment));
+
+  $callback = 'comment.post_render_cache:renderForm';
+  $placeholder = drupal_render_cache_generate_placeholder($callback, $context);
+  $element['#markup'] = str_replace($placeholder, $markup, $element['#markup']);
+
+  return $element;
+}</code></pre>
+					</section>
+					<section>
+						<h2>7 versus 8</h2>
+						<blockquote>Drupal 8 is <em>slow!</em></blockquote>
+						<p class="fragment">True. But we're <span class="fragment highlight-green">still optimizing</span> it. Too much change pre-beta.</p>
+					</section>
+					<section>
+						<h3>If Drupal pages were ships…</h3>
+						<p>(Drupal rendering a page ~ building a ship)</p>
+					</section>
+					<section>
+						<h3>… then this could be Drupal 8…</h3>
+						<figure>
+							<img src="img/lego-ship-drupal8.jpg">
+							<figcaption>Assembled from components. Clear boundaries.</figcaption>
+						</figure>
+					</section>
+					<section>
+						<h3>… and this would be Drupal 7</h3>
+						<figure>
+							<img src="img/lego-ship-drupal7.jpg">
+							<figcaption>Assembled from seemingly random pieces. <em>But it is a boat!</em></figcaption>
+						</figure>
+					</section>
+					<section>
+						<h2>If this a well-performing Drupal 8…</h2>
+						<img src="img/druplicon-lego-step3.jpg" alt="Photo of a Druplicon built with LEGO bricks.">
+					</section>
+					<section>
+						<h2>… then this is NOT where we are at…</h2>
+						<img src="img/druplicon-lego-step1.jpg" alt="Photo of a Druplicon built with LEGO bricks.">
+					</section>
+					<section>
+						<h2>… but rather something like</h2>
+						<img src="img/druplicon-lego-step2.jpg" alt="Photo of a Druplicon built with LEGO bricks.">
 					</section>
 				</section>
 
