@@ -60,28 +60,234 @@
 					<p>
 						<ul>
 							<li>Fabian Franz <small style="vertical-align: baseline">(<a href="https://tag1consulting.com/">Tag1 Consulting</a> — <a href="https://twitter.com/fabianfranz">@fabianfranz</a>)</small></li>
-							<li>Marco Molinari <small style="vertical-align: baseline">(<a href="https://tag1consulting.com/">Tag1 Consulting</a> — <a href="https://twitter.com/marcomolinari">@marcomolinari</a>)</small></li>
+							<li>Marco Molinari <small style="vertical-align: baseline">(<a href="https://tag1consulting.com/">Tag1 Consulting</a>)</small></li>
 							<li>Wim Leers <small style="vertical-align: baseline">(<a href="https://acquia.com/">Acquia</a> — <a href="https://twitter.com/wimleers">@wimleers</a> — <a href="http://wimleers.com/">wimleers.com</a>)</small></li>
 						</ul>
 					</p>
 				</section>
 
 				<section>
+                    <section>
+                        <h2>Current state in Drupal 7</h2>
+                        <aside class="notes">
+                            Who knows it? Who uses it?<br />
+                        </aside>
+                    </section>
+                    <section>
+                        <a href="https://www.drupal.org/project/render_cache">
+                            <img src="img/section1_current_d7/1.0.1-render_cache_usage.png">
+                        </a>
+                        <aside class="notes">
+                            Not surprising, but popular sites like d.o use it.<br />
+                        </aside>
+                    </section>
 					<section>
-						<h2>Marco (15 minutes)</h2>
+						<h2>What's the problem?</h2>
+                        <p class="fragment">building and rendering entities can be slow</p>
+                        <img class="fragment" src="img/section1_current_d7/1.1.1-page_exec_time.png">
+                        <img class="fragment" src="img/section1_current_d7/1.1.2-render_profile.png" width="70%" height="70%">
+                        <aside class="notes">
+                            <ul>
+                                <li>not the first bottleneck you see</li>
+                                <li>as you implement more requirements</li>
+                                <li>generally happens with multiple entities on a page</li>
+                                <li>after a while the page starts to "feel slow"</li>
+                                <li>page exec time, sql queries are fine, you analyze it with xhprof</li>
+                                <li>probably you can't cache the page</li>
+                                <li>it's web server, load balancing, but...</li>
+                            </ul>
+                        </aside>
 					</section>
-					<section>
-						<h2>D7 - current state and manual #cache, #pre_render</h2>
-					</section>
-					<section>
-						<h2>render_cache makes it simpler to use for many cases</h2>
-					</section>
-					<section>
-						<h2>Hash based approach allows simpler variations and expiration (entity modified)</h2>
-					</section>
-					<section>
-						<h2>DEMO and awe! (metrics, xhprof)</h2>
-					</section>
+                    <section>
+                        <h2>The existing solution</h2>
+                        <p class="fragment">render arrays have a #cache property!</p>
+                        <pre class="fragment"><code data-trim contenteditable>
+function render_example_arrays() {
+    $interval = 60;
+
+    $page_array = array(
+        t('cache demonstration') => array(
+            '#markup' => t('your content'),
+            '#cache' => array(
+                'keys' => array('render_example', 'cache', 'demo'),
+                'bin' => 'cache',
+                'expire' => time() + $interval,
+                'granularity' => DRUPAL_CACHE_PER_ROLE,
+            ),
+        ),
+    );
+
+    return $page_array;
+}
+                        </code></pre>
+                        <aside class="notes">
+                            <ul>
+                                <li>keys, bin, expire, granularity</li>
+                                <li>not enough</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <h2>The existing solution</h2>
+                        <pre><code data-trim contenteditable>
+function render_example_arrays() {
+    $interval = 60;
+
+    $page_array = array(
+        t('cache demonstration') => array(
+            '#markup' => '',
+            '#pre_render' => array('render_example_cache_pre_render'),
+            '#cache' => array(
+                'keys' => array('render_example', 'cache', 'demo'),
+                'bin' => 'cache',
+                'expire' => time() + $interval,
+                'granularity' => DRUPAL_CACHE_PER_ROLE,
+            ),
+        ),
+    );
+    return $page_array;
+}
+                        </code></pre>
+                        <pre><code data-trim contenteditable>
+function render_example_cache_pre_render($element) {
+    $element['#markup'] = t('your content');
+
+    // @see http://drupal.org/node/914792
+    $element['#children'] = $element['#markup'];
+    return $element;
+}
+                        </code></pre>
+                        <aside class="notes">
+                            <ul>
+                                <li>this works</li>
+                                <li>low level</li>
+                                <li>not elegant</li>
+                                <li>cache invalidation</li>
+                                <li>who already used this?</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <h2>The existing solution</h2>
+                        <p>
+                            <a href="http://omnifik.com/blog/render-arrays-and-cache-drupal-7
+">http://omnifik.com/blog/render-arrays-and-cache-drupal-7</a><br/>
+                            <a href="https://www.acquia.com/blog/drupal-8-performance-render-caching
+">https://www.acquia.com/blog/drupal-8-performance-render-caching</a>
+                        </p>
+                    </section>
+                    <section>
+                        <h2>render_cache module for D7</h2>
+                        <p class="fragment">demo!</p>
+                        <p class="fragment">very simple site</p>
+                        <p class="fragment">core, features, views</p>
+                        <p class="fragment">devel_generate to populate it</p>
+                        <p class="fragment">300 "article" nodes</p>
+                        <p class="fragment">2 "page" nodes with 100 comments each</p>
+                        <pre class="fragment"><code data-trim contenteditable>
+function render_cache_demo_render_cache_entity_cache_info_alter
+  (&$cache_info, $entity, $context) {
+    $cache_info['render_cache_render_to_markup'] = TRUE;
+}
+                        </code></pre>
+                        <aside class="notes">
+                            <ul>
+                                <li>simpler, more elegant, more powerful</li>
+                                <li>demo!</li>
+                                <li>nothing fancy, no memcache, just standard Drupal, Views, Features and a few more modules</li>
+                                <li>one line of custom code</li>
+                                <li>we'll focus on 2 pages: a View of the articles, and node view with lots
+                                    of comments</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <h2>Benchmarks</h2>
+                        <pre class="fragment"><code data-trim contenteditable>
+drush --yes pm-disable render_cache
+# make sure we have warm caches
+ab -n 1 -c 1 http://rendercache.local/ > /dev/null
+ab -n 30 -c 5 http://rendercache.local/
+
+drush --yes pm-enable render_cache_views render_cache_comments
+# make sure we have warm caches
+ab -n 1 -c 1 http://rendercache.local/ > /dev/null
+ab -n 30 -c 5 http://rendercache.local/
+                        </code></pre>
+                    </section>
+                    <section>
+                        <h2>Demo</h2>
+                        <img class="fragment" src="img/section1_current_d7/1.8.1-xhprof_diff.png"width="70%" height="70%">
+                        <aside class="notes">
+                            <ul>
+                                <li>show the two pages</li>
+                                <li>run benchmarks</li>
+                                <li>not the proper way to load test (see jMeter)</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <h2>Demo</h2>
+                        <img src="img/section1_current_d7/1.8.2-xhprof_diff_drupal_render_cache.png" width="70%" height="70%">
+                    </section>
+                    <section>
+                        <h2>real life example</h2>
+                        <p>drupal.org/node/15365 (220 comments)</p>
+                        <img src="img/section1_current_d7/1.8.3-xhprof-render_cache-node-15365--220-comments-threaded.png" width="70%" height="70%"><br>
+                        <small><a href="https://www.drupal.org/node/2299547#comment-8960641
+">https://www.drupal.org/node/2299547#comment-8960641</a></small>
+                    </section>
+                    <section>
+                        <h2>real life example</h2>
+                        <p>drupal.org/node/2280195 (146 comments)</p>
+                        <img src="img/section1_current_d7/1.8.4-xhprof-render_cache-node-2280195--146-comments.png" width="70%" height="70%">
+                        <small><a href="https://www.drupal.org/node/2299547#comment-8960641
+">https://www.drupal.org/node/2299547#comment-8960641</a></small>
+                    </section>
+                    <section>
+                        <h2>Cache Invalidation</h2>
+                        <p class="fragment">back to demo</p>
+                        <aside class="notes">
+                            <ul>
+                                <li>Update a node, reload view, node is updated and page is still fast</li>
+                                <li>Uses entity_modified module</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <h2>How to use it</h2>
+                        <p class="fragment">Includes integration with comments, context, ds, nodes, views</p>
+                        <p class="fragment">Works with custom entities<br /><small>(if they use entity_view() from entity.module)</small></p>
+                        <p class="fragment">Hooks:</p>
+                        <pre class="fragment"><code data-trim contenteditable>
+hook_render_cache_entity_hash
+hook_render_cache_entity_cid
+hook_render_cache_entity_default_cache_info
+                        </code></pre>
+                        <pre class="fragment"><code data-trim contenteditable>
+render_cache_render_to_markup
+                        </code></pre>
+                        <p class="fragment">How it was implemented in d.o: <a href="https://www.drupal.org/node/2299547">https://www.drupal.org/node/2299547</a></p>
+                        <aside class="notes">
+                            <ul>
+                                <li>default_cache_info: bin, expire, granularity, keys + render_cache_render_to_markup</li>
+                                <li>you need to know what you're doing (know the business logic)</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <h2>Caveats</h2>
+                        <p class="fragment">Think in Entities</p>
+                        <p class="fragment">Permanent cache</p>
+                        <p class="fragment">Embedded entities</p>
+                        <aside class="notes">
+                            <ul>
+                                <li>D7 works with entities and view modes; it's a good idea anyway; example fields and views; example views_row_cache</li>
+                                <li>permanent cache: you should try to use memcache, which is a good idea for other reasons anyway</li>
+                                <li>d.o and users in comments</li>
+                            </ul>
+                        </aside>
+                    </section>
 				</section>
 
 				<section>
@@ -346,11 +552,11 @@ public function renderForm(array $element, array $context) {
 					</section>
 				</section>
 
-				<section>
-					<h1>Questions?</h1>
-					<p><a href="https://github.com/wimleers/talk-render-caching-in-drupal-7-and-8">github.com/wimleers/talk-render-caching-in-drupal-7-and-8</a></p>
-					<h3><em>Thanks!</em></h3>
-				</section>
+                <section>
+                    <h1>Questions?</h1>
+                    <p><a href="https://github.com/wimleers/talk-render-caching-in-drupal-7-and-8">github.com/wimleers/talk-render-caching-in-drupal-7-and-8</a></p>
+                    <h3><em>Thanks!</em></h3>
+                </section>
 
 			</div>
 
