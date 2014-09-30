@@ -260,10 +260,10 @@ ab -n 30 -c 5 http://rendercache.local/
                         <p class="fragment">Works with custom entities<br /><small>(if they use entity_view() from entity.module)</small></p>
                         <p class="fragment">Hooks:</p>
                         <pre class="fragment"><code data-trim contenteditable style="width: 900px">
-hook_render_cache_entity_default_cache_info($cache_info, $context)
-hook_render_cache_entity_cache_info($cache_info, $entity, $context)
-hook_render_cache_entity_hash($hash, $entity, $cache_info, $context)
-hook_render_cache_entity_cid($cid_parts, $entity, $cache_info, $context)
+hook_render_cache_entity_default_cache_info_alter($cache_info, $context)
+hook_render_cache_entity_cache_info_alter($cache_info, $entity, $context)
+hook_render_cache_entity_hash_alter($hash, $entity, $cache_info, $context)
+hook_render_cache_entity_cid_alter($cid_parts, $entity, $cache_info, $context)
                         </code></pre>
                         <aside class="notes">
                             <ul>
@@ -295,7 +295,6 @@ hook_render_cache_entity_cid($cid_parts, $entity, $cache_info, $context)
                             <li>bundle</li>
                             <li>modified</li>
                             <li>view mode</li>
-                            <li>render method</li>
                         </ul>
                         <aside class="notes">
                             <ul>
@@ -369,12 +368,13 @@ function drupalorg_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, 
                     </section>
                     <section>
                         <h2>Caveats</h2>
+                        <p><small>(in 7.x-1.x...)</small></p>
                         <p class="fragment">Think in Entities</p>
                         <p class="fragment">Permanent cache</p>
                         <p class="fragment">Embedded entities</p>
                         <aside class="notes">
                             <ul>
-                                <li>D7 works with entities and view modes; it's a good idea anyway; example fields and views; example views_row_cache</li>
+                                <li>D7 works with entities and view modes; it's a good idea anyway; example fields and views; example views_row_cache; patch by Dave Reid</li>
                                 <li>permanent cache: you should try to use memcache, which is a good idea for other reasons anyway</li>
                                 <li>d.o and users in comments</li>
                             </ul>
