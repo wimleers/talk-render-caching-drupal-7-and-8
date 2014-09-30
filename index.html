@@ -390,9 +390,6 @@ function drupalorg_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, 
                 </section>
 				<section>
 					<section>
-						<h2>Fabian (5 minutes)</h2>
-					</section>
-					<section>
 						<h2>Ideal case in an ideal world (stacked rendering)</h2>
 					</section>
 					<section>
@@ -639,15 +636,203 @@ public function renderForm(array $element, array $context) {
 				</section>
 
 				<section>
-					<section>
-						<h2>Fabian (10 minutes)</h2>
-					</section>
-					<section>
-						<h2>D7 future - render_cache-7.x-2.x-dev -- full page caching, placeholders and cacheable CSRF for forms, pseudo #cache tags, cache revalidation.</h2>
-					</section>
-					<section>
-						<h2>ESI, Big Pipe, etc. => extending outside the stack</h2>
-					</section>
+                    <section>
+                        <h2>Fastest Drupal Ever!</h2>
+                        <p>A work-in-progress view
+                            of what I am working on with render_cache-7.x-2.x-dev.</p>
+                    </section>
+                    <section>
+                        <h2>Caching Inside Drupal</h2>
+                        <ul>
+                            <li>HTTP Middleware Page Cache / Hook Boot</li>
+                            <li>Cache ID is unique internal identifier</li>
+                            <li>Page cached with placeholders, e.g. :</li>
+                            <ul>
+                                <li>block:whos_online:u:%user</li>
+                                <li>block:more_info:%page</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Inside Drupal</h2>
+                        <ul>
+                            <li>Only get the page from Cache</li>
+                            <li>Expand CIDs (from %user -> 2)</li>
+                            <li>cache_get_multiple()</li>
+                            <ul>
+                                <li>Hit: Replace placeholders, return page</li>
+                                <li>Miss: Process the request normally</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Inside Drupal</h2>
+                        <ul>
+                            <li>ADVANTAGE: Works for logged in users out of the box.</li>
+                            <li>Simple granularities work best!</li>
+                            <li>Extensible</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>The same possible in NGINX / Varnish with e.g. Memcache plugin.</li>
+                            <li>Open Problems:</li>
+                            <ul>
+                                <li>Authenticate user session.</li>
+                                <li>Expand Cache IDs</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>ESI</li>
+                            <li>AJAX</li>
+                            <li>AJAX + Local Storage</li>
+                            <ul>
+                                <li>Cache Tags make local re-validation possible!</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>Can use the same placeholders!</li>
+                            <li>However: Need to indirect via UUID to ensure its secure.</li>
+                            <li>{1234-5678} => block:whos_online:%user</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>Proposal: ESI / AJAX in knowledge of the original request, e.g. /fragment/1234-5678</li>
+                            <ul>
+                                <li>with special: X-Drupal-Request: /node/1</li>
+                            </ul>
+                            <ul>
+                                <li>Fast Path: cache_get() -> Hit</li>
+                                <li>Slow Path: Execute page, return only fragment</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>Problem: We want to cache the fragments, too.</li>
+                            <li>- Need: Expires header</li>
+                            <li>- Need: Authorized Context (User, Page, etc.)</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>Proposal: #cache[‘ttl’] = 600</li>
+                            <li>API addition</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>Context for AJAX:
+                            </li>
+                            <ul>
+                                <li>/fragment/X?user=123:&lt;token&gt;</li>
+                                <li>/fragment/Y?page=node/1:&lt;token&gt;</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>Context for ESI:</li>
+                            <ul>
+                                <li>&lt;esi src=“/fragment/X” /&gt;</li>
+                                <ul>
+                                    <li>X-Drupal-User: 123:&lt;token&gt;</li>
+                                    <li>X-Drupal-Role: 2:&lt;token&gt;</li>
+                                </ul>
+                                <li>Need to use X-* headers, because Varnish does not implement full ESI spec.</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>Cool Trick:</li>
+                            <ul>
+                                <li>Session can be cached within Varnish from SESS* cookie to custom headers.</li>
+                                <li>Using varnish’s return (restart)</li>
+                                <li>=> Users are authenticated within Varnish per UID and Role.</li>
+                                <li>=> Users are authenticated within Varnish per UID and Role.</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>Drupal should decide if Varnish should use ESI or not:</li>
+                            <ul>
+                                <li>X-Drupal-Esi: 1</li>
+                                <li>=> set req.esi=true</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>Open Problem: What about the assets?</li>
+                            <ul>
+                                <li>Javascript</li>
+                                <li>CSS</li>
+                            </ul>
+                            <li>How to bundle?</li>
+                            <li>How to load after replacing placeholder?</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Caching Outside Drupal</h2>
+                        <ul>
+                            <li>Open Problem: What about form tokens?</li>
+                            <ul>
+                                <li>cacheable_csrf - 7.x</li>
+                                <li>D8? This should be in Core!</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Big Pipe with Drupal</h2>
+                        <ul>
+                            <li>Theoretically already possible in 7.x!</li>
+                            <li>Core is pre-determined for it.</li>
+                            <li>Only change:</li>
+                            <ul>
+                                <li>html-top + html-bottom templates</li>
+                                <li>Send more data before closing &lt;body&gt; tag</li>
+                            </ul>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Big Pipe with Drupal</h2>
+                        <ul>
+                            <li>Send CSS files once received from ‘placeholder’</li>
+                            <li>Send all big pipe JS files bundled in the footer.</li>
+                            <li>Need: <b>Intelligent bundler that analyzes ‘placeholder’ added files and adds them to the bundles.</b></li>
+                            </ul>
+                        </ul>                    </section>
+                    <section>
+                        <h2>Big Pipe with Drupal</h2>
+                        <ul>
+                            <li>Intelligent Pipe: Can just return content, if data is cached already and cacheable.</li>
+                            <li>Can still nicely stream real time data.</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Big Pipe with Drupal</h2>
+                        <ul>
+                            <li>DEMO</li>
+                        </ul>
+                    </section>
 				</section>
 
                 <section>
