@@ -182,7 +182,7 @@ function render_example_cache_pre_render($element) {
                         <p class="fragment">very simple site</p>
                         <p class="fragment">core, features, views</p>
                         <p class="fragment">devel_generate to populate it</p>
-                        <p class="fragment">300 <i>article</i> nodes</p>
+                        <p class="fragment">50 <i>article</i> nodes</p>
                         <p class="fragment">1 <i>page</i> node with 300 comments</p>
                         <pre class="fragment"><code data-trim contenteditable>
 function render_cache_demo_render_cache_entity_cache_info_alter
@@ -217,7 +217,7 @@ ab -n 30 -c 5 http://rendercache.local/
                     </section>
                     <section>
                         <h2>Demo</h2>
-                        <img class="fragment" src="img/section1_current_d7/1.8.1-xhprof_diff.png"width="70%" height="70%">
+                        <img class="fragment" src="img/section1_current_d7/1.8.0-chart.png"width="70%" height="70%">
                         <aside class="notes">
                             <ul>
                                 <li>show the two pages</li>
@@ -228,7 +228,14 @@ ab -n 30 -c 5 http://rendercache.local/
                     </section>
                     <section>
                         <h2>Demo</h2>
+                        <img src="img/section1_current_d7/1.8.1-xhprof_diff.png"width="70%" height="70%">
+                    </section>
+                    <section>
+                        <h2>Demo</h2>
                         <img src="img/section1_current_d7/1.8.2-xhprof_diff_drupal_render_cache.png" width="70%" height="70%">
+                        <aside class="notes">
+                            What about a real life example?
+                        </aside>
                     </section>
                     <section>
                         <h2>real life example</h2>
@@ -315,7 +322,7 @@ function drupalorg_render_cache_entity_default_cache_info_alter(&$cache_info, $c
 }
                         </code></pre>
                         <aside class="notes">
-                            The problem was to cache comments.
+                            The problem were comments.
                         </aside>
                     </section>
                     <section>
