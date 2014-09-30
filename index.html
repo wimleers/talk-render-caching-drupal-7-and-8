@@ -182,8 +182,8 @@ function render_example_cache_pre_render($element) {
                         <p class="fragment">very simple site</p>
                         <p class="fragment">core, features, views</p>
                         <p class="fragment">devel_generate to populate it</p>
-                        <p class="fragment">300 "article" nodes</p>
-                        <p class="fragment">2 "page" nodes with 100 comments each</p>
+                        <p class="fragment">300 <i>article</i> nodes</p>
+                        <p class="fragment">2 <i>page</i> nodes with 100 comments each</p>
                         <pre class="fragment"><code data-trim contenteditable>
 function render_cache_demo_render_cache_entity_cache_info_alter
   (&$cache_info, $entity, $context) {
@@ -259,21 +259,113 @@ ab -n 30 -c 5 http://rendercache.local/
                         <p class="fragment">Includes integration with comments, context, ds, nodes, views</p>
                         <p class="fragment">Works with custom entities<br /><small>(if they use entity_view() from entity.module)</small></p>
                         <p class="fragment">Hooks:</p>
-                        <pre class="fragment"><code data-trim contenteditable>
-hook_render_cache_entity_hash
-hook_render_cache_entity_cid
-hook_render_cache_entity_default_cache_info
+                        <pre class="fragment"><code data-trim contenteditable style="width: 900px">
+hook_render_cache_entity_default_cache_info($cache_info, $context)
+hook_render_cache_entity_cache_info($cache_info, $entity, $context)
+hook_render_cache_entity_hash($hash, $entity, $cache_info, $context)
+hook_render_cache_entity_cid($cid_parts, $entity, $cache_info, $context)
                         </code></pre>
-                        <pre class="fragment"><code data-trim contenteditable>
-render_cache_render_to_markup
-                        </code></pre>
-                        <p class="fragment">How it was implemented in d.o: <a href="https://www.drupal.org/node/2299547">https://www.drupal.org/node/2299547</a></p>
                         <aside class="notes">
                             <ul>
-                                <li>default_cache_info: bin, expire, granularity, keys + render_cache_render_to_markup</li>
+                                <li>default_cache_info: bin, expire, granularity, keys</li>
                                 <li>you need to know what you're doing (know the business logic)</li>
                             </ul>
                         </aside>
+                    </section>
+                    <section>
+                        <h2>How to use it</h2>
+                        <p>cache_info defaults:</p>
+                            <pre><code class="php">
+      return array(
+        'bin' => 'cache_render',
+        'expire' => CACHE_PERMANENT,
+        // Use per role to support contextual and its safer anyway.
+        'granularity' => DRUPAL_CACHE_PER_ROLE,
+        'keys' => array(),
+        // Special keys that are only related to our implementation.
+        'render_cache_render_to_markup' => FALSE,
+      );
+                            </code></pre>
+                    </section>
+                    <section>
+                        <h2>How to use it</h2>
+                        <p>hash defaults:</p>
+                        <ul>
+                            <li>entity id</li>
+                            <li>bundle</li>
+                            <li>modified</li>
+                            <li>view mode</li>
+                            <li>render method</li>
+                        </ul>
+                        <aside class="notes">
+                            <ul>
+                                <li>cid: entity type, theme, cache granularity</li>
+                            </ul>
+                        </aside>
+                    </section>
+                    <section>
+                        <h2>How to use it</h2>
+                        <p>How it was implemented in d.o: <a href="https://www.drupal.org/node/2299547">https://www.drupal.org/node/2299547</a></p>
+                        <pre><code class="php" style="width: 1100px">
+/**
+ * Implements hook_render_cache_entity_default_cache_info_alter().
+ */
+function drupalorg_render_cache_entity_default_cache_info_alter(&$cache_info, $context) {
+  // Disable entity_view() render caching by default to avoid side effects.
+  $cache_info['granularity'] = DRUPAL_NO_CACHE;
+}
+                        </code></pre>
+                        <aside class="notes">
+                            The problem was to cache comments.
+                        </aside>
+                    </section>
+                    <section>
+                        <h2>How to use it</h2>
+                        <pre><code class="php" style="width: 1100px; max-height: 550px">
+/**
+ * Implements hook_render_cache_entity_cache_info_alter().
+ */
+function drupalorg_render_cache_entity_cache_info_alter(&$cache_info, $entity, $context) {
+  // Always render_to_markup if possible.
+  $cache_info['render_cache_render_to_markup'] = TRUE;
+
+  // Check if render caching should be enabled for comments.
+  if (variable_get('drupalorg_render_cache_comment_enabled', TRUE)
+      && $context['entity_type'] == 'comment'
+      && $context['view_mode'] == 'full') {
+    $cache_info['granularity'] = DRUPAL_CACHE_PER_ROLE;
+    // Store that this needs special comment processing.
+    $cache_info['drupalorg_comment_processing'] = TRUE;
+  }
+}
+                        </code></pre>
+                    </section>
+                    <section>
+                        <h2>How to use it</h2>
+                        <pre><code class="php" style="width: 1100px; max-height: 550px">
+/**
+ * Implements hook_render_cache_entity_hash_alter().
+ */
+function drupalorg_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, $context) {
+  if (!empty($cache_info['drupalorg_comment_processing'])) {
+    // Comment is displaying users, so need to add this to the hash, entity is already added.
+    $hash['comment_uid'] = $entity->uid;
+    if (!empty($entity->uid)) {
+      $hash['comment_uid_modified'] = entity_modified_last_id('user', $entity->uid);
+    }
+    $hash['is_viewer'] = $entity->uid == $GLOBALS['user']->uid;
+    $node = node_load($entity->nid);
+    $hash['is_author'] = $entity->uid == $node->uid;
+    $hash['is_new'] = !empty($entity->new);
+    $hash['first_new'] = !empty($entity->first_new);
+    // @todo Maybe disable caching for preview?
+    $hash['in_preview'] = isset($entity->in_preview);
+    // @todo Maybe disable caching for threaded comments?
+    $hash['divs'] = isset($entity->divs) ? $entity->divs : '';
+    $hash['divs_final'] = isset($entity->divs_final) ? $entity->divs_final : '';
+  }
+}
+                        </code></pre>
                     </section>
                     <section>
                         <h2>Caveats</h2>
@@ -288,8 +380,7 @@ render_cache_render_to_markup
                             </ul>
                         </aside>
                     </section>
-				</section>
-
+                </section>
 				<section>
 					<section>
 						<h2>Fabian (5 minutes)</h2>
