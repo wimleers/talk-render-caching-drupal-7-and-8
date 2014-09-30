@@ -107,7 +107,7 @@ function render_example_arrays() {
 
     $page_array = array(
         t('cache demonstration') => array(
-            '#markup' => t('your content'),
+            '#markup' => t('time: ') . time(),
             '#cache' => array(
                 'keys' => array('render_example', 'cache', 'demo'),
                 'bin' => 'cache',
@@ -150,7 +150,7 @@ function render_example_arrays() {
                         </code></pre>
                         <pre><code data-trim contenteditable>
 function render_example_cache_pre_render($element) {
-    $element['#markup'] = t('your content');
+    $element['#markup'] = t('time: ') . time(),
 
     // @see http://drupal.org/node/914792
     $element['#children'] = $element['#markup'];
