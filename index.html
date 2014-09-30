@@ -93,8 +93,7 @@
                                 <li>generally happens with multiple entities on a page</li>
                                 <li>after a while the page starts to "feel slow"</li>
                                 <li>page exec time, sql queries are fine, you analyze it with xhprof</li>
-                                <li>probably you can't cache the page</li>
-                                <li>it's web server, load balancing, but...</li>
+                                <li>my most important slide</li>
                             </ul>
                         </aside>
 					</section>
@@ -229,10 +228,6 @@ ab -n 30 -c 5 http://rendercache.local/
                     <section>
                         <h2>Demo</h2>
                         <img src="img/section1_current_d7/1.8.1-xhprof_diff.png"width="70%" height="70%">
-                    </section>
-                    <section>
-                        <h2>Demo</h2>
-                        <img src="img/section1_current_d7/1.8.2-xhprof_diff_drupal_render_cache.png" width="70%" height="70%">
                         <aside class="notes">
                             What about a real life example?
                         </aside>
@@ -241,13 +236,6 @@ ab -n 30 -c 5 http://rendercache.local/
                         <h2>real life example</h2>
                         <p>drupal.org/node/15365 (220 comments)</p>
                         <img src="img/section1_current_d7/1.8.3-xhprof-render_cache-node-15365--220-comments-threaded.png" width="70%" height="70%"><br>
-                        <small><a href="https://www.drupal.org/node/2299547#comment-8960641
-">https://www.drupal.org/node/2299547#comment-8960641</a></small>
-                    </section>
-                    <section>
-                        <h2>real life example</h2>
-                        <p>drupal.org/node/2280195 (146 comments)</p>
-                        <img src="img/section1_current_d7/1.8.4-xhprof-render_cache-node-2280195--146-comments.png" width="70%" height="70%">
                         <small><a href="https://www.drupal.org/node/2299547#comment-8960641
 ">https://www.drupal.org/node/2299547#comment-8960641</a></small>
                     </section>
@@ -264,7 +252,7 @@ ab -n 30 -c 5 http://rendercache.local/
                     <section>
                         <h2>How to use it</h2>
                         <p class="fragment">Includes integration with comments, context, ds, nodes, views</p>
-                        <p class="fragment">Works with custom entities<br /><small>(if they use entity_view() from entity.module)</small></p>
+                        <p class="fragment">Works with custom entities<br /><small>(if they use entity_view() from entity API)</small></p>
                         <p class="fragment">Hooks:</p>
                         <pre class="fragment"><code data-trim contenteditable style="width: 900px">
 hook_render_cache_entity_default_cache_info_alter($cache_info, $context)
@@ -311,7 +299,7 @@ hook_render_cache_entity_cid_alter($cid_parts, $entity, $cache_info, $context)
                     </section>
                     <section>
                         <h2>How to use it</h2>
-                        <p>How it was implemented in d.o: <a href="https://www.drupal.org/node/2299547">https://www.drupal.org/node/2299547</a></p>
+                        <p>How it was implemented in d.o:<br /><a href="https://www.drupal.org/node/2299547">https://www.drupal.org/node/2299547</a></p>
                         <pre><code class="php" style="width: 1100px">
 /**
  * Implements hook_render_cache_entity_default_cache_info_alter().
@@ -376,14 +364,14 @@ function drupalorg_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, 
                     <section>
                         <h2>Caveats</h2>
                         <p><small>(in 7.x-1.x...)</small></p>
+                        <p class="fragment">Embedded entities</p>
                         <p class="fragment">Think in Entities</p>
                         <p class="fragment">Permanent cache</p>
-                        <p class="fragment">Embedded entities</p>
                         <aside class="notes">
                             <ul>
+                                <li>d.o and users in comments</li>
                                 <li>D7 works with entities and view modes; it's a good idea anyway; example fields and views; example views_row_cache; patch by Dave Reid</li>
                                 <li>permanent cache: you should try to use memcache, which is a good idea for other reasons anyway</li>
-                                <li>d.o and users in comments</li>
                             </ul>
                         </aside>
                     </section>
