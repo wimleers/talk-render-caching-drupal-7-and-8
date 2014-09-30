@@ -206,6 +206,10 @@ function render_cache_demo_render_cache_entity_cache_info_alter
                         </aside>
                     </section>
                     <section>
+                        <h2>Demo</h2>
+                        <iframe src="http://rendercache.local/" width="950" height="600" style="margin:0;overflow:hidden;border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px"></iframe>
+                    </section>
+                    <section>
                         <h2>Benchmarks</h2>
                         <pre class="fragment"><code data-trim contenteditable>
 drush --yes pm-disable render_cache
@@ -218,10 +222,6 @@ drush --yes pm-enable render_cache_views render_cache_comments
 ab -n 1 -c 1 http://rendercache.local/ > /dev/null
 ab -n 30 -c 5 http://rendercache.local/
                         </code></pre>
-                    </section>
-                    <section>
-                        <h2>Demo</h2>
-                        <img class="fragment" src="img/section1_current_d7/1.8.0-chart.png"width="70%" height="70%">
                         <aside class="notes">
                             <ul>
                                 <li>show the two pages</li>
@@ -231,14 +231,18 @@ ab -n 30 -c 5 http://rendercache.local/
                         </aside>
                     </section>
                     <section>
-                        <h2>Demo</h2>
+                        <h2>Benchmarks</h2>
+                        <img class="fragment" src="img/section1_current_d7/1.8.0-chart.png"width="70%" height="70%">
+                    </section>
+                    <section>
+                        <h2>Benchmarks</h2>
                         <img src="img/section1_current_d7/1.8.1-xhprof_diff.png"width="70%" height="70%">
                         <aside class="notes">
                             What about a real life example?
                         </aside>
                     </section>
                     <section>
-                        <h2>real life example</h2>
+                        <h2>Real life example</h2>
                         <p>drupal.org/node/15365 (220 comments)</p>
                         <img src="img/section1_current_d7/1.8.3-xhprof-render_cache-node-15365--220-comments-threaded.png" width="70%" height="70%"><br>
                         <small><a href="https://www.drupal.org/node/2299547#comment-8960641
@@ -246,7 +250,7 @@ ab -n 30 -c 5 http://rendercache.local/
                     </section>
                     <section>
                         <h2>Cache Invalidation</h2>
-                        <p class="fragment">back to demo</p>
+                        <iframe src="http://rendercache.local/" width="950" height="600" style="margin:0;overflow:hidden;border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px"></iframe>
                         <aside class="notes">
                             <ul>
                                 <li>Update a node, reload view, node is updated and page is still fast</li>
