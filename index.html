@@ -478,12 +478,12 @@ function drupalorg_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, 
 						<h2>API &amp; DX</h2>
 						<blockquote>Every entity has a cache tag</blockquote>
 						<pre><code class="php" style="text-align: center;">EntityInterface::getCacheTag()</code></pre>
-						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'][] = $user->getCacheTag();</code></pre>
-						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'][] = $node->getCacheTag();</code></pre>
-						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'][] = $term->getCacheTag();</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'] = $user->getCacheTag();</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'] = $node->getCacheTag();</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'] = $term->getCacheTag();</code></pre>
 						<p class="fragment">Not only content entities, but also config entities:</p>
-						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'][] = $menu->getCacheTag();</code></pre>
-						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'][] = $tour->getCacheTag();</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'] = $menu->getCacheTag();</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'] = $tour->getCacheTag();</code></pre>
 						<p class="fragment"><small>…</small></p>
 					</section>
 					<section>
