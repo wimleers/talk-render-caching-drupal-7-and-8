@@ -478,12 +478,12 @@ function drupalorg_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, 
 						<h2>API &amp; DX</h2>
 						<blockquote>Every entity has a cache tag</blockquote>
 						<pre><code class="php" style="text-align: center;">EntityInterface::getCacheTag()</code></pre>
-						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'] = $user->getCacheTag();</code></pre>
-						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'] = $node->getCacheTag();</code></pre>
-						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'] = $term->getCacheTag();</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$user->getCacheTag()</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$node->getCacheTag()</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$term->getCacheTag()</code></pre>
 						<p class="fragment">Not only content entities, but also config entities:</p>
-						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'] = $menu->getCacheTag();</code></pre>
-						<pre class="fragment"><code class="php" style="text-align: center;">$element['#cache']['tags'] = $tour->getCacheTag();</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$menu->getCacheTag()</code></pre>
+						<pre class="fragment"><code class="php" style="text-align: center;">$tour->getCacheTag()</code></pre>
 						<p class="fragment"><small>…</small></p>
 					</section>
 					<section>
@@ -569,7 +569,7 @@ $build['#cache']['tags'] == array(
   <region data-cache-tags="block:search_form">
     <block data-cache-tags="block:search_form"></block>
   </region>
-  <region data-cache-tags="block:news view:news">
+  <region data-cache-tags="block:news view:news block:main_content node:17 user:2 filter_format:basic_html file:5 file:3">
     <block data-cache-tags="block:news view:news">
       <view data-cache-tags="view:news"></view>
     </block>
