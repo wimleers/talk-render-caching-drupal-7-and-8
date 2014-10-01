@@ -422,6 +422,7 @@ function drupalorg_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, 
 						<ol>
 							<li>Cache tags
 								<ol>
+									<li>Why?</li>
 									<li>API &amp; DX</li>
 									<li>Entity render caching</li>
 									<li>Bubbling</li>
@@ -432,7 +433,36 @@ function drupalorg_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, 
 							<li>7 versus 8: visualization</li>
 						</ol>
 					</section>
-					<!-- Omitted section: "Cache tags == dependencies" — Marco or Fabian should explain this earlier. -->
+					<section>
+						<img src="img/page-caching-d7.png" width="960" height="587" alt="Screenshot of page caching being enabled in Drupal 7." />
+						<p class="fragment">… clears the entire page cache on node save!</p>
+						<aside class="notes">
+							<p>I suspect most of those interested in this talk have seen and checked this checkbox. But did you know that in many scenarios, it works less than great? When you edit <em>any</em> node or even comment, <em>all</em> page cache entries will be deleted!</p>
+						</aside>
+					</section>
+					<section>
+						<h2>Cache clearing in Drupal 7</h2>
+						<ol>
+							<li class="fragment">Clear a specific cache entry:
+							<pre><code class="php">cache_clear_all('foo:content:id', $bin);</code></pre></li>
+							<li class="fragment">Clear a coarse set of cache entries:
+							<pre><code class="php">cache_clear_all('foo:content:', $bin, TRUE);</code></pre></li>
+							<li class="fragment">Clear all entries:
+							<pre><code class="php">cache_clear_all('*', $bin, TRUE);</code></pre></li>
+						</ol>
+						<div class="fragment">
+							<p>⬇</p>
+							<blockquote>&ldquo;How to clear all entries containing node 42?&rdquo;</blockquote>
+						</div>
+						<div class="fragment">
+							<p>⬇</p>
+							<p><em>Impossible!</em></p>
+						</div>
+						<aside class="notes">
+							<p>Drupal 7 just clears the page cache whenever any content is added/modified, <em>because</em> there is no way to do it better!</p>
+							<p>It is possible to implement workarounds, like <a href="https://drupal.org/project/issues/performance_hacks">the Performance Hacks module</a> does, but even then it will only work if custom code was specifically written for it. That module claims a 30–40% performance win.</p>
+						</aside>
+					</section>
 					<section>
 						<h2>API &amp; DX</h2>
 						<blockquote>A cache tag is a string</blockquote>
