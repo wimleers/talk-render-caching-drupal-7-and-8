@@ -46,6 +46,11 @@
                 .reveal li {
                   padding-bottom: 20px;
                 }
+
+                .reveal ul ul {
+                  padding-top: 20px;
+                }
+
 		</style>
 
 		<!--[if lt IE 9]>
@@ -387,16 +392,30 @@ function drupalorg_render_cache_entity_hash_alter(&$hash, $entity, $cache_info, 
                 </section>
 				<section>
 					<section>
-						<h2>Fabian (5 minutes)</h2>
+						<h2>Let's dream the future!</h2>
 					</section>
 					<section>
-						<h2>Ideal case in an ideal world (stacked rendering)</h2>
+						<h2>Ideal case in an ideal world</h2>
+						<img src="img/ideal-case.jpg" alt="An HTML page consists of several regions, which contain blocks, which contaijn entities, which contain other entities." />
 					</section>
 					<section>
 						<h2>The problem of cache invalidation</h2>
+						<ul>
+                        			  <li class="fragment">Hash like in 7.x-1.x?</li>
+                                                  <li class="fragment">NO! - It is massive work!</li>
+                        			  <li class="fragment">Node, Comments, User Picture, ...</li>
+						</ul>
+					</section
+					><section>
+						<h2>Give up the dream?</h2>
+						<ul>
+                        			  <li class="fragment">NO WAY!</li>
+                                                  <li class="fragment">Drupal 8 has you covered!</li>
+                                                  <li class="fragment">(mostly)</li>
+						</ul>
 					</section>
-				</section>
 
+				</section>
 				<section>
 					<section data-background="img/8.svg" data-background-size="60%">
 						<h2>Render caching in Drupal 8</h2>
@@ -638,90 +657,91 @@ public function renderForm(array $element, array $context) {
 				<section>
                     <section>
                         <h2>Fastest Drupal Ever!</h2>
-                        <p>A work-in-progress view
+                        <p class="fragment">A work-in-progress view
                             of what I am working on with render_cache-7.x-2.x-dev.</p>
                     </section>
                     <section>
                         <h2>Caching Inside Drupal</h2>
                         <ul>
                             <li>HTTP Middleware Page Cache / Hook Boot</li>
-                            <li>Cache ID is unique internal identifier</li>
-                            <li>Page cached with placeholders, e.g. :</li>
-                            <ul>
-                                <li>block:whos_online:u:%user</li>
-                                <li>block:more_info:%page</li>
-                            </ul>
+                            <li class="fragment">Cache ID is unique internal identifier</li>
+                            <li class="fragment">Page cached with placeholders, e.g. : </li>
+			    <pre class="fragment"><code class="php" style="text-align: center;">'block:whos_online:u:%user'</code></pre>
+			    <pre class="fragment"><code class="php" style="text-align: center;">'block:more_info:%page'</code></pre>
                         </ul>
                     </section>
                     <section>
                         <h2>Caching Inside Drupal</h2>
                         <ul>
                             <li>Only get the page from Cache</li>
-                            <li>Expand CIDs (from %user -> 2)</li>
-                            <li>cache_get_multiple()</li>
-                            <ul>
+                            <li class="fragment">Expand CIDs (from %user -> 2)</li>
+                            <li class="fragment">cache_get_multiple()
+                              <ul>
                                 <li>Hit: Replace placeholders, return page</li>
                                 <li>Miss: Process the request normally</li>
-                            </ul>
+                              </ul>
+                            </li>
                         </ul>
                     </section>
                     <section>
                         <h2>Caching Inside Drupal</h2>
                         <ul>
                             <li>ADVANTAGE: Works for logged in users out of the box.</li>
-                            <li>Simple granularities work best!</li>
-                            <li>Extensible</li>
+                            <li class="fragment">Simple granularities work best!</li>
+                            <li class="fragment">Extensible</li>
                         </ul>
                     </section>
                     <section>
                         <h2>Caching Outside Drupal</h2>
                         <ul>
                             <li>The same possible in NGINX / Varnish with e.g. Memcache plugin.</li>
-                            <li>Open Problems:</li>
-                            <ul>
+                            <li class="fragment">Open Problems:
+                              <ul>
                                 <li>Authenticate user session.</li>
                                 <li>Expand Cache IDs</li>
-                            </ul>
+                              </ul>
+                            </li>
                         </ul>
                     </section>
                     <section>
                         <h2>Caching Outside Drupal</h2>
                         <ul>
                             <li>ESI</li>
-                            <li>AJAX</li>
-                            <li>AJAX + Local Storage</li>
-                            <ul>
+                            <li class="fragment">AJAX</li>
+                            <li class="fragment">AJAX + Local Storage
+                              <ul class="fragment">
                                 <li>Cache Tags make local re-validation possible!</li>
-                            </ul>
+                              </ul>
+                            </li>
                         </ul>
                     </section>
                     <section>
                         <h2>Caching Outside Drupal</h2>
                         <ul>
                             <li>Can use the same placeholders!</li>
-                            <li>However: Need to indirect via UUID to ensure its secure.</li>
-                            <li>{1234-5678} => block:whos_online:%user</li>
+                            <li class="fragment">However: Need to indirect via UUID to ensure its secure.</li>
                         </ul>
+			<pre class="fragment"><code class="php" style="text-align: center;">array('{1234-5678}' => 'block:whos_online:%user');</code></pre>
+                        
                     </section>
                     <section>
                         <h2>Caching Outside Drupal</h2>
                         <ul>
-                            <li>Proposal: ESI / AJAX in knowledge of the original request, e.g. /fragment/1234-5678</li>
-                            <ul>
-                                <li>with special: X-Drupal-Request: /node/1</li>
-                            </ul>
-                            <ul>
-                                <li>Fast Path: cache_get() -> Hit</li>
-                                <li>Slow Path: Execute page, return only fragment</li>
-                            </ul>
+                            <li>Proposal: ESI / AJAX in knowledge of the original request, e.g.</li>
+                        </ul>
+                        <pre class="fragment"><code class="php" style="text-align: center;">GET: /fragment/1234-5678</code></pre>
+                        <pre class="fragment"><code class="php" style="text-align: center;">X-Drupal-Request: /node/1</code></pre>
+                        <ul class="fragment">
+                          <li>Fast Path: cache_get() -> Hit</li>
+                          <li>Slow Path: Execute page, return only fragment</li>
                         </ul>
                     </section>
                     <section>
                         <h2>Caching Outside Drupal</h2>
                         <ul>
                             <li>Problem: We want to cache the fragments, too.</li>
-                            <li>- Need: Expires header</li>
-                            <li>- Need: Authorized Context (User, Page, etc.)</li>
+                            <li class="fragment">- <strong>Need</strong>: Expires header</li>
+                            <li class="fragment">- <strong>Need</strong>: Authorized Context (User, Page, etc.)</li>
                         </ul>
                     </section>
                     <section>
@@ -759,23 +779,25 @@ public function renderForm(array $element, array $context) {
                     <section>
                         <h2>Caching Outside Drupal</h2>
                         <ul>
-                            <li>Cool Trick:</li>
-                            <ul>
+                            <li>Cool Trick:
+                              <ul>
                                 <li>Session can be cached within Varnish from SESS* cookie to custom headers.</li>
-                                <li>Using varnish’s return (restart)</li>
-                                <li>=> Users are authenticated within Varnish per UID and Role.</li>
-                                <li>=> Users are authenticated within Varnish per UID and Role.</li>
-                            </ul>
+                                <li class="fragment">Using varnish’s return (restart)</li>
+                                <li class="fragment">=> Users are authenticated within Varnish per UID and Role.</li>
+                              </ul>
+                            </li>
+                            <li class="fragment"><a href="">https://www.adayinthelifeof.nl/2012/07/06/using-varnish-to-offload-and-cache-your-oauth-requests/</a></li>
                         </ul>
                     </section>
                     <section>
                         <h2>Caching Outside Drupal</h2>
                         <ul>
-                            <li>Drupal should decide if Varnish should use ESI or not:</li>
+                          <li>Drupal should decide if Varnish should use ESI or not:
                             <ul>
-                                <li>X-Drupal-Esi: 1</li>
-                                <li>=> set req.esi=true</li>
+                                <li class="fragment">X-Drupal-Esi: 1</li>
+                                <li class="fragment">=> set req.esi=true</li>
                             </ul>
+                          </li>
                         </ul>
                     </section>
                     <section>
@@ -793,47 +815,95 @@ public function renderForm(array $element, array $context) {
                     <section>
                         <h2>Caching Outside Drupal</h2>
                         <ul>
-                            <li>Open Problem: What about form tokens?</li>
+                          <li>Open Problem: What about form tokens?
                             <ul>
-                                <li>cacheable_csrf - 7.x</li>
-                                <li>D8? This should be in Core!</li>
+                                <li class="fragment">cacheable_csrf - 7.x</li>
+                                <li class="fragment">D8? This should be in Core!</li>
                             </ul>
+                          </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>And now ...</h2>
+                    </section>
+                    <section>
+                        <h2>we get to ...</h2>
+                    </section>
+                    <section>
+                        <h2>something really cool ...</h2>
+                    </section>
+                    <section>
+                        <h2>really really cool!</h2>
+                    </section>
+                    <section>
+                        <h2>Big Pipe with Drupal</h2>
+                        <ul>
+                          <li>Facebook idea</li>
+                          <li class="fragment">Show the page as soon as possible!</li>
+                          <li class="fragment">... but then continue loading it</li>
+                          <li class="fragment">and stream the content to the client.</li>
                         </ul>
                     </section>
                     <section>
                         <h2>Big Pipe with Drupal</h2>
                         <ul>
-                            <li>Theoretically already possible in 7.x!</li>
-                            <li>Core is pre-determined for it.</li>
-                            <li>Only change:</li>
+                          <li>Theoretically already possible in 7.x!</li>
+                          <li class="fragment">Core is pre-determined for it.</li>
+                          <li class="fragment">Only change:
                             <ul>
-                                <li>html-top + html-bottom templates</li>
-                                <li>Send more data before closing &lt;body&gt; tag</li>
+                                <li class="fragment">html-top + html-bottom templates</li>
+                                <li class="fragment">Send more data before closing &lt;body&gt; tag</li>
                             </ul>
+                          </li>
                         </ul>
                     </section>
                     <section>
                         <h2>Big Pipe with Drupal</h2>
                         <ul>
                             <li>Send CSS files once received from ‘placeholder’</li>
-                            <li>Send all big pipe JS files bundled in the footer.</li>
-                            <li>Need: <b>Intelligent bundler that analyzes ‘placeholder’ added files and adds them to the bundles.</b></li>
+                            <li class="fragment">Send all big pipe JS files bundled in the footer.</li>
+                            <li class="fragment">Need: <b>Intelligent bundler that analyzes ‘placeholder’ added files and adds them to the bundles.</b></li>
                             </ul>
                         </ul>                    </section>
                     <section>
                         <h2>Big Pipe with Drupal</h2>
                         <ul>
                             <li>Intelligent Pipe: Can just return content, if data is cached already and cacheable.</li>
-                            <li>Can still nicely stream real time data.</li>
+                            <li class="fragment">Can still nicely stream real time data.</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Big Pipe with Drupal - DEMO!</h2>
+                    </section>
+                    <section>
+                        <h2>How many lines of code?</h2>
+                        <ul>
+                            <li class="fragment">100?</li>
+                            <li class="fragment">1000?</li>
+                            <li class="fragment">6!</li>
                         </ul>
                     </section>
                     <section>
                         <h2>Big Pipe with Drupal</h2>
-                        <ul>
-                            <li>DEMO</li>
-                        </ul>
+                            <pre><code class="php" style="width: 1000px; margin-left: -100px">
+function hook_render_cache_block_cache_info_alter(&$cache_info, $object, $context) {
+  if ($context['module'] == 'rc_site') {
+    $cache_info['granularity'] = DRUPAL_CACHE_CUSTOM;
+    $cache_info['render_strategy'][] = 'big_pipe';
+  }
+}
+</code></pre>
+ 
                     </section>
-				</section>
+                    <section>
+                        <h2>Resources to try out!</h2>
+                        <ul>
+                            <li class="fragment">7.x-2.x-dev: <a href="https://www.drupal.org/project/render_cache">https://www.drupal.org/project/render_cache</a></li>
+                            <li class="fragment">Demo Module: <a href="https://github.com/LionsAd/render_cache_site">https://github.com/LionsAd/render_cache_site</a></li>
+                        </ul>
+
+                    </section>
+	        </section>
 
                 <section>
                     <h1>Questions?</h1>
